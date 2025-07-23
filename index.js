@@ -1,5 +1,6 @@
 export default {
     async fetch(request, env) {
+      const TOKEN = env.TOKEN;
       const url = new URL(request.url);
       if (url.pathname === '/') {
         return new Response(renderHTMLPage(), {
@@ -25,6 +26,13 @@ export default {
       const vad_filter = url.searchParams.get('vad_filter') === 'true';
       const initial_prompt = url.searchParams.get('initial_prompt') || null;
       const prefix = url.searchParams.get('prefix') || null;
+
+      const token = url.searchParams.get('token') || null;
+
+      if (token !== TOKEN) {
+        return new Response('Invalid token', { status: 401 });
+      }
+
   
       const blob = await request.arrayBuffer();
   
@@ -271,6 +279,9 @@ export default {
     <label>前缀 (optional):</label>
     <input type="text" id="prefix" />
 
+    <label>TOKEN（仅允许授权用户使用）:</label>
+    <input type="text" id="token" />
+
     <label><input type="checkbox" id="vad_filter" checked />启用VAD过滤</label>
 
     <button type="submit">提交</button>
@@ -345,13 +356,15 @@ export default {
       const initial_prompt = document.getElementById('initial_prompt').value;
       const prefix = document.getElementById('prefix').value;
       const vad_filter = document.getElementById('vad_filter').checked;
+      const token = document.getElementById('token').value;
 
       const params = new URLSearchParams({
         task,
         ...(language && { language }),
         ...(initial_prompt && { initial_prompt }),
         ...(prefix && { prefix }),
-        vad_filter: vad_filter.toString()
+        vad_filter: vad_filter.toString(),
+        token: token
       });
 
       try {
